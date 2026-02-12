@@ -1,0 +1,90 @@
+/* Definições de Cores da Marca */
+:root {
+    --medcei-green: #61B695;
+    --medcei-yellow: #ECC440;
+    --medcei-dark: #282828;
+    --medcei-bg: #E6F2F5;
+    --white: #FFFFFF;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif; /* Fonte para corpo de texto */
+    background-color: var(--medcei-bg);
+    margin: 0;
+    color: var(--medcei-dark);
+}
+
+header {
+    text-align: center;
+    background: var(--medcei-dark);
+    color: var(--white);
+    padding: 30px;
+    border-bottom: 5px solid var(--medcei-green);
+}
+
+h1, h2 {
+    font-family: 'Roboto', sans-serif; /* Fonte para títulos */
+    margin: 0;
+}
+
+.logo-area span {
+    font-size: 0.8em;
+    letter-spacing: 2px;
+    color: var(--medcei-green);
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 25px;
+    padding: 40px;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.controls {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.field label {
+    font-weight: 700;
+    color: var(--medcei-dark);
+}
+
+/* Customização dos Sliders */
+input[type="range"].slider-green::-webkit-slider-thumb {
+    background: var(--medcei-green);
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background: var(--medcei-green);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #4e9a7d;
+}
+
+.chart-area {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9em;
+    color: #777;
+}
