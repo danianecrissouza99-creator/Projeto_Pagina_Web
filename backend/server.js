@@ -185,9 +185,15 @@ app.post('/simular', async (req, res) => {
     const gamma = parseFloat(taxaRecup);
     const totalDias = parseInt(dias);
 
+    // CÁLCULO DO RT - Von Foerster (Duração média da infeção = 1 / gamma)
+    const duracaoMedia = 1 / gamma;
+
     // Começamos o Dia 0 com pop - 1 suscetíveis e 1 infetado
-    let s = [pop - 1], i = [1], r = [0]; 
+    let s = [pop - 1], i = [1], r = [0], rt = []; 
     
+    // Rt inicial
+    rt.push(parseFloat((beta * duracaoMedia * ((pop - 1) / pop)).toFixed(2)));
+
     // Variáveis internas sem arredondamento para a matemática fluir
     let currentS = pop - 1;
     let currentI = 1;
@@ -206,6 +212,10 @@ app.post('/simular', async (req, res) => {
         s.push(Math.round(currentS));
         i.push(Math.round(currentI));
         r.push(Math.round(currentR));
+        
+        // Calcular e registar o Rt nesta fase
+        let rtAtual = beta * duracaoMedia * (currentS / pop);
+        rt.push(parseFloat(rtAtual.toFixed(2)));
     }
 
     if (userId) {
@@ -235,7 +245,7 @@ app.post('/simular', async (req, res) => {
                         VALUES (@id_sim, @pop, @tax_inf, @tax_rec, @dias)`);
 
             // 3. Inserir em Resultado_Simulacao (opcional conforme a tua DB)
-            const graficosJSON = JSON.stringify({ s, i, r });
+            const graficosJSON = JSON.stringify({ s, i, r, rt });
             await pool.request()
                 .input('id_sim', sql.Int, idSimulacao)
                 .input('dados', sql.NVarChar(sql.MAX), graficosJSON)
@@ -243,13 +253,13 @@ app.post('/simular', async (req, res) => {
                 .input('tot_rec', sql.Int, currentR)
                 .query(`INSERT INTO Resultado_Simulacao (id_simulacao, dados_grafico, total_infetados, total_recuperados) 
                         VALUES (@id_sim, @dados, @tot_inf, @tot_rec)`);
-
+            
         } catch (error) {
             console.error("Erro ao guardar histórico:", error);
         }
     }
 
-    res.json({ success: true, curvas: { s, i, r } });
+    res.json({ success: true, curvas: { s, i, r, rt } });
 });
 
 // Buscar histórico (Faz JOIN entre Simulacao e Parametros)

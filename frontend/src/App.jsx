@@ -37,7 +37,7 @@ function App() {
 
   // --- ESTADOS DO SIMULADOR ---
   const [params, setParams] = useState({ populacao: 1000, taxaTrans: 0.3, taxaRecup: 0.1, dias: 30 });
-  const [resultados, setResultados] = useState({ s: [], i: [], r: [] });
+  const [resultados, setResultados] = useState({ s: [], i: [], r: [], rt: [] });
   const [isSimulating, setIsSimulating] = useState(false);
 
   // --- ESTADOS DE DADOS (HISTÓRICO E ADMIN) ---
@@ -599,33 +599,60 @@ function App() {
     );
   }
 
-  // --- CONFIGURAÇÃO DA ANIMAÇÃO DO GRÁFICO ---
+  // --- CONFIGURAÇÃO DA ANIMAÇÃO DO GRÁFICO (COM DOIS EIXOS Y) ---
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 2000, easing: 'easeInOutQuart' },
     interaction: { mode: 'index', intersect: false },
     plugins: {
-      legend: { position: 'top', labels: { font: { family: "'Segoe UI', sans-serif", size: 13 }, usePointStyle: true, boxWidth: 8, color: '#333333' } },
-      tooltip: { backgroundColor: 'rgba(51, 51, 51, 0.95)', titleFont: { size: 14, family: "'Segoe UI', sans-serif" }, bodyFont: { size: 13, family: "'Segoe UI', sans-serif" }, padding: 12, cornerRadius: 8 }
+      legend: {
+        position: 'top',
+        labels: { font: { family: "'Segoe UI', sans-serif", size: 13 }, usePointStyle: true, boxWidth: 8, color: '#333333' }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(51, 51, 51, 0.95)',
+        titleFont: { size: 14, family: "'Segoe UI', sans-serif" },
+        bodyFont: { size: 13, family: "'Segoe UI', sans-serif" },
+        padding: 12,
+        cornerRadius: 8
+      }
     },
-    scales: { x: { grid: { display: false }, ticks: { color: '#777' } }, y: { grid: { color: '#f0f0f0' }, beginAtZero: true, ticks: { color: '#777' } } }
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#777' } },
+      y: { 
+        type: 'linear',
+        display: true,
+        position: 'left',
+        grid: { color: '#f0f0f0' }, 
+        beginAtZero: true, 
+        ticks: { color: '#777' } 
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        grid: { drawOnChartArea: false }, 
+        ticks: { color: '#E74C3C' }
+      }
+    }
   };
 
   // --- INTERFACE PRINCIPAL (DASHBOARD) ---
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F9F8' }}>
       <style>{cssStyles}</style>
-      
       <header>
         <div style={{ fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
           <div style={{ width: '30px', height: '30px', backgroundColor: '#75BFA2', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginRight: '10px' }}>
-             <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 'bold' }}>M</span>
+            <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 'bold' }}>M</span>
           </div>
-          <strong style={{ color: '#333333', letterSpacing: '1px' }}>MEDCEI</strong> 
+          <strong style={{ color: '#333333', letterSpacing: '1px' }}>MEDCEI</strong>
           <span className="status-dot"></span>
-          <span style={{ margin: '0 10px 0 0', color: '#EAEAEA' }}>|</span> 
-          <span style={{ fontWeight: '500', color: '#555' }}>{user.nome}</span> <span style={{ color: '#E3C53C', fontSize: '13px', marginLeft: '6px', fontWeight: 'bold' }}>({user.tipo})</span>
+          <span style={{ margin: '0 10px 0 0', color: '#EAEAEA' }}>|</span>
+          <span style={{ fontWeight: '500', color: '#555' }}>{user.nome}</span>
+          <span style={{ color: '#E3C53C', fontSize: '13px', marginLeft: '6px', fontWeight: 'bold' }}>({user.tipo})</span>
         </div>
         <nav>
           <button className="nav-btn" style={{ color: view === 'simulador' ? '#75BFA2' : '' }} onClick={() => setView('simulador')}>Simulador</button>
@@ -665,27 +692,51 @@ function App() {
                 {isSimulating ? 'A processar dados...' : 'Correr Simulação'}
               </button>
             </div>
-            
+
             <div className="card fade-in delay-2" style={{ flex: 1, minWidth: '600px' }}>
               <h3 style={{ marginBottom: '25px', color: '#333333' }}>Curva Epidemiológica</h3>
               <div className="chart-container">
-                <Line data={{
-                  labels: Array.from({ length: resultados.s.length }, (_, i) => `Dia ${i}`),
-                  datasets: [
-                    { 
-                      label: 'Suscetíveis', data: resultados.s, borderColor: '#E3C53C', backgroundColor: 'rgba(227, 197, 60, 0.15)', fill: true, tension: 0.4, 
-                      pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#E3C53C', pointBorderWidth: 2, pointHoverRadius: 6, pointHitRadius: 10 
-                    },
-                    { 
-                      label: 'Infetados', data: resultados.i, borderColor: '#333333', backgroundColor: 'rgba(51, 51, 51, 0.1)', fill: true, tension: 0.4, 
-                      pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#333333', pointBorderWidth: 2, pointHoverRadius: 6, pointHitRadius: 10 
-                    },
-                    { 
-                      label: 'Recuperados', data: resultados.r, borderColor: '#75BFA2', backgroundColor: 'rgba(117, 191, 162, 0.15)', fill: true, tension: 0.4, 
-                      pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#75BFA2', pointBorderWidth: 2, pointHoverRadius: 6, pointHitRadius: 10 
-                    }
-                  ]
-                }} options={chartOptions} />
+                <Line 
+                  data={{
+                    labels: Array.from({ length: resultados.s.length }, (_, i) => `Dia ${i}`),
+                    datasets: [
+                      {
+                        label: 'Suscetíveis',
+                        data: resultados.s,
+                        borderColor: '#E3C53C',
+                        backgroundColor: 'rgba(227, 197, 60, 0.15)',
+                        fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#E3C53C', pointBorderWidth: 2, pointHoverRadius: 6, pointHitRadius: 10
+                      },
+                      {
+                        label: 'Infetados',
+                        data: resultados.i,
+                        borderColor: '#333333',
+                        backgroundColor: 'rgba(51, 51, 51, 0.1)',
+                        fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#333333', pointBorderWidth: 2, pointHoverRadius: 6, pointHitRadius: 10
+                      },
+                      {
+                        label: 'Recuperados',
+                        data: resultados.r,
+                        borderColor: '#75BFA2',
+                        backgroundColor: 'rgba(117, 191, 162, 0.15)',
+                        fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#75BFA2', pointBorderWidth: 2, pointHoverRadius: 6, pointHitRadius: 10
+                      },
+                      {
+                        label: 'Rt (Nº Reprod. Efetivo)',
+                        data: resultados.rt || [],
+                        borderColor: '#E74C3C',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        yAxisID: 'y1',
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHitRadius: 10
+                      }
+                    ]
+                  }} 
+                  options={chartOptions} 
+                />
               </div>
             </div>
           </div>
@@ -693,162 +744,174 @@ function App() {
 
         {/* VISTA: HISTÓRICO */}
         {view === 'historico' && (
-          <div className="fade-in delay-1">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ color: '#333333' }}>O Meu Histórico</h2>
+          <div className="card fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+              <h3 style={{ margin: 0 }}>O Meu Histórico de Simulações</h3>
               <div>
-                <button onClick={exportarCSV} className="btn-secondary" style={{ backgroundColor: '#75BFA2', boxShadow: '0 4px 10px rgba(117, 191, 162, 0.3)' }}>📥 Exportar CSV</button>
-                <button onClick={limparHistorico} className="btn-danger">🗑️ Limpar Tudo</button>
+                <button onClick={exportarCSV} className="btn-secondary">Exportar CSV</button>
+                <button onClick={limparHistorico} className="btn-danger">Limpar Tudo</button>
               </div>
             </div>
-            
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table-style">
-                  <thead>
-                    <tr>
-                      <th>ID</th><th>Nome da Simulação</th><th>Estado</th><th>Data</th><th>População</th><th>Taxa β</th><th>Taxa γ</th><th>Dias</th>
+            {historico.length === 0 ? (
+              <p style={{ color: '#777', textAlign: 'center', padding: '40px 0' }}>Ainda não realizaste nenhuma simulação.</p>
+            ) : (
+              <table className="table-style">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Simulação</th>
+                    <th>Estado</th>
+                    <th>População</th>
+                    <th>Taxa Inf.</th>
+                    <th>Taxa Rec.</th>
+                    <th>Dias</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historico.map(h => (
+                    <tr key={h.id_simulacao}>
+                      <td>{new Date(h.data_criacao).toLocaleDateString('pt-PT')}</td>
+                      <td style={{ fontWeight: '500' }}>{h.nome_simulacao}</td>
+                      <td><span style={{ color: '#75BFA2', fontWeight: '600', fontSize: '12px', padding: '4px 8px', backgroundColor: 'rgba(117, 191, 162, 0.1)', borderRadius: '4px' }}>{h.estado}</span></td>
+                      <td>{h.populacao_inicial}</td>
+                      <td>{h.taxa_infeccao}</td>
+                      <td>{h.taxa_recuperacao}</td>
+                      <td>{h.duracao_dias}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {historico.length === 0 ? (
-                      <tr><td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#888' }}>Ainda não fizeste nenhuma simulação.</td></tr>
-                    ) : (
-                      historico.map(h => (
-                        <tr key={h.id_simulacao}>
-                          <td style={{ fontWeight: 'bold', color: '#999' }}>#{h.id_simulacao}</td>
-                          <td style={{ fontWeight: '500' }}>{h.nome_simulacao || 'N/A'}</td>
-                          <td>
-                            <span style={{ 
-                              backgroundColor: h.estado === 'CONCLUIDA' ? 'rgba(117, 191, 162, 0.2)' : 'rgba(227, 197, 60, 0.2)', 
-                              color: h.estado === 'CONCLUIDA' ? '#5BAA8C' : '#CBAE2E', 
-                              padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' 
-                            }}>
-                              {h.estado}
-                            </span>
-                          </td>
-                          <td style={{ color: '#666' }}>{new Date(h.data_criacao).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' })}</td>
-                          <td>{h.populacao_inicial}</td><td>{h.taxa_infeccao}</td><td>{h.taxa_recuperacao}</td><td>{h.duracao_dias}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
-        {/* VISTA: ADMIN */}
-        {view === 'admin' && (
-          <div className="fade-in delay-1">
-            <h2 style={{ color: '#333333' }}>Gestão de Utilizadores</h2>
-            
-            <div className="card" style={{ borderTop: '4px solid #E3C53C' }}>
-              <h3 style={{ color: '#E3C53C' }}>{adminForm.id_utilizador ? 'Editar Utilizador' : 'Adicionar Novo Utilizador'}</h3>
-              <form onSubmit={guardarUtilizadorAdmin} style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                <div style={{ flex: '1 1 200px' }}>
-                  <label>Nome</label>
-                  <input type="text" placeholder="Nome completo" className="input-style" value={adminForm.nome} onChange={e => setAdminForm({...adminForm, nome: e.target.value})} required />
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                  <label>E-mail</label>
-                  <input type="email" placeholder="E-mail profissional" className="input-style" value={adminForm.email} onChange={e => setAdminForm({...adminForm, email: e.target.value})} required />
-                </div>
-                <div style={{ flex: '1 1 150px' }}>
-                  <label>Data de Nasc.</label>
-                  <input type="date" className="input-style" value={adminForm.data_nascimento} onChange={e => setAdminForm({...adminForm, data_nascimento: e.target.value})} required />
-                </div>
-                <div style={{ flex: '1 1 150px' }}>
-                  <label>Telefone</label>
-                  <input type="tel" placeholder="Telefone" className="input-style" value={adminForm.telefone} onChange={e => setAdminForm({...adminForm, telefone: e.target.value})} required />
-                </div>
-                {!adminForm.id_utilizador && (
-                  <div style={{ flex: '1 1 150px' }}>
-                    <label>Password</label>
-                    <input type="password" placeholder="Palavra-passe" className="input-style" value={adminForm.password} onChange={e => setAdminForm({...adminForm, password: e.target.value})} required />
+        {/* VISTA: ADMINISTRAÇÃO */}
+        {view === 'admin' && user?.tipo === 'Admin' && (
+          <div className="fade-in">
+            <div className="card" style={{ marginBottom: '30px' }}>
+              <h3>{adminForm.id_utilizador ? 'Editar Utilizador' : 'Adicionar Novo Utilizador'}</h3>
+              <form onSubmit={guardarUtilizadorAdmin}>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Nome</label>
+                    <input type="text" className="input-style" value={adminForm.nome} onChange={e => setAdminForm({...adminForm, nome: e.target.value})} required />
                   </div>
-                )}
-                <div style={{ width: '120px' }}>
-                  <label>Tipo</label>
-                  <select className="input-style" value={adminForm.tipo} onChange={e => setAdminForm({...adminForm, tipo: e.target.value})}>
-                    <option value="User">User</option>
-                    <option value="Admin">Admin</option>
-                  </select>
+                  <div className="form-group">
+                    <label>E-mail</label>
+                    <input type="email" className="input-style" value={adminForm.email} onChange={e => setAdminForm({...adminForm, email: e.target.value})} required />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '10px' }}>
-                  <button type="submit" className="btn-primary" style={{ backgroundColor: '#E3C53C', boxShadow: '0 4px 12px rgba(227, 197, 60, 0.3)' }}>{adminForm.id_utilizador ? 'Guardar' : 'Criar'}</button>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" className="input-style" value={adminForm.telefone} onChange={e => setAdminForm({...adminForm, telefone: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Data de Nascimento</label>
+                    <input type="date" className="input-style" value={adminForm.data_nascimento} onChange={e => setAdminForm({...adminForm, data_nascimento: e.target.value})} />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Tipo de Conta</label>
+                    <select className="input-style" value={adminForm.tipo} onChange={e => setAdminForm({...adminForm, tipo: e.target.value})}>
+                      <option value="User">Utilizador Normal (User)</option>
+                      <option value="Admin">Administrador (Admin)</option>
+                    </select>
+                  </div>
+                  {!adminForm.id_utilizador && (
+                    <div className="form-group">
+                      <label>Palavra-passe Inicial</label>
+                      <input type="password" className="input-style" value={adminForm.password} onChange={e => setAdminForm({...adminForm, password: e.target.value})} required />
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" className="btn-primary">{adminForm.id_utilizador ? 'Atualizar Utilizador' : 'Criar Utilizador'}</button>
                   {adminForm.id_utilizador && (
-                    <button type="button" onClick={() => setAdminForm({ id_utilizador: null, nome: '', email: '', password: '', tipo: 'User', data_nascimento: '', telefone: '' })} className="btn-secondary" style={{ backgroundColor: '#EAEAEA', color: '#555', boxShadow: 'none' }}>Cancelar</button>
+                    <button type="button" className="btn-secondary" style={{ margin: 0, backgroundColor: '#EAEAEA', color: '#333' }} onClick={() => setAdminForm({ id_utilizador: null, nome: '', email: '', password: '', tipo: 'User', data_nascimento: '', telefone: '' })}>Cancelar Edição</button>
                   )}
                 </div>
               </form>
             </div>
 
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table-style">
-                  <thead>
-                    <tr>
-                      <th>ID</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Data Nasc.</th><th>Tipo</th><th>Ações</th>
+            <div className="card">
+              <h3>Gestão de Utilizadores ({utilizadores.length})</h3>
+              <table className="table-style">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Tipo</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {utilizadores.map(u => (
+                    <tr key={u.id_utilizador}>
+                      <td>#{u.id_utilizador}</td>
+                      <td style={{ fontWeight: '500' }}>{u.nome}</td>
+                      <td>{u.email}</td>
+                      <td>{u.telefone || '-'}</td>
+                      <td>
+                        <span style={{ 
+                          color: u.tipo === 'Admin' ? '#E3C53C' : '#555', 
+                          fontWeight: '600', fontSize: '12px', padding: '4px 8px', 
+                          backgroundColor: u.tipo === 'Admin' ? 'rgba(227, 197, 60, 0.1)' : '#EAEAEA', 
+                          borderRadius: '4px' 
+                        }}>
+                          {u.tipo}
+                        </span>
+                      </td>
+                      <td>
+                        <button onClick={() => setAdminForm({ 
+                          id_utilizador: u.id_utilizador, nome: u.nome, email: u.email, 
+                          tipo: u.tipo, data_nascimento: u.data_nascimento ? u.data_nascimento.split('T')[0] : '', 
+                          telefone: u.telefone || '', password: '' 
+                        })} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }}>Editar</button>
+                        <button onClick={() => apagarUtilizador(u.id_utilizador)} className="btn-danger" style={{ padding: '6px 12px', fontSize: '12px' }}>Apagar</button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {utilizadores.map(u => (
-                      <tr key={u.id_utilizador}>
-                        <td style={{ fontWeight: 'bold', color: '#999' }}>#{u.id_utilizador}</td>
-                        <td style={{ fontWeight: '500' }}>{u.nome}</td>
-                        <td style={{ color: '#666' }}>{u.email}</td>
-                        <td style={{ color: '#666' }}>{u.telefone || '-'}</td>
-                        <td style={{ color: '#666' }}>{u.data_nascimento ? new Date(u.data_nascimento).toLocaleDateString('pt-PT') : '-'}</td>
-                        <td>
-                          <span style={{ 
-                            backgroundColor: u.tipo === 'Admin' ? 'rgba(227, 197, 60, 0.2)' : 'rgba(117, 191, 162, 0.2)', 
-                            color: u.tipo === 'Admin' ? '#CBAE2E' : '#5BAA8C', 
-                            padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' 
-                          }}>
-                            {u.tipo}
-                          </span>
-                        </td>
-                        <td>
-                          <button onClick={() => setAdminForm({ id_utilizador: u.id_utilizador, nome: u.nome, email: u.email, password: '', tipo: u.tipo, data_nascimento: u.data_nascimento ? u.data_nascimento.split('T')[0] : '', telefone: u.telefone || '' })} className="btn-secondary" style={{ padding: '6px 12px', margin: '0 8px 0 0', backgroundColor: '#75BFA2', boxShadow: 'none' }}>Editar</button>
-                          <button onClick={() => apagarUtilizador(u.id_utilizador)} className="btn-danger" style={{ padding: '6px 12px', margin: 0, boxShadow: 'none' }}>Apagar</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
         {/* VISTA: PERFIL */}
         {view === 'perfil' && (
-          <div className="fade-in delay-1" style={{ display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
-            <div className="card" style={{ width: '100%', maxWidth: '600px', borderTop: '4px solid #75BFA2' }}>
-              <h2 style={{ textAlign: 'left', marginBottom: '30px', color: '#75BFA2' }}>Definições de Conta</h2>
+          <div className="fade-in" style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <div className="card" style={{ flex: 1, minWidth: '300px' }}>
+              <h3>Informações Pessoais</h3>
               <form onSubmit={atualizarPerfil}>
-                <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>Dados Pessoais</h3>
                 <label>Nome Completo</label>
                 <input type="text" className="input-style" value={perfilData.nome} onChange={e => setPerfilData({...perfilData, nome: e.target.value})} required />
+                
                 <label>E-mail</label>
                 <input type="email" className="input-style" value={perfilData.email} onChange={e => setPerfilData({...perfilData, email: e.target.value})} required />
+                
                 <div className="form-row">
                   <div className="form-group">
                     <label>Data de Nascimento</label>
-                    <input type="date" className="input-style" value={perfilData.data_nascimento ? perfilData.data_nascimento.split('T')[0] : ''} onChange={e => setPerfilData({...perfilData, data_nascimento: e.target.value})} required />
+                    <input type="date" className="input-style" value={perfilData.data_nascimento ? perfilData.data_nascimento.split('T')[0] : ''} onChange={e => setPerfilData({...perfilData, data_nascimento: e.target.value})} />
                   </div>
                   <div className="form-group">
                     <label>Telefone</label>
-                    <input type="tel" className="input-style" value={perfilData.telefone} onChange={e => setPerfilData({...perfilData, telefone: e.target.value})} required />
+                    <input type="tel" className="input-style" value={perfilData.telefone} onChange={e => setPerfilData({...perfilData, telefone: e.target.value})} />
                   </div>
                 </div>
+
                 <div className="divider"></div>
-                <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>Segurança (Alterar Palavra-passe)</h3>
+
+                <h3 style={{ fontSize: '18px' }}>Segurança (Mudar Palavra-passe)</h3>
                 <p style={{ fontSize: '13px', color: '#777', marginTop: '-10px', marginBottom: '15px' }}>Deixa em branco se não quiseres alterar a palavra-passe atual.</p>
+                
                 <label>Palavra-passe Atual</label>
                 <input type="password" placeholder="Necessária para alterações de segurança" className="input-style" value={perfilData.senhaAtual} onChange={e => setPerfilData({...perfilData, senhaAtual: e.target.value})} />
+                
                 <div className="form-row">
                   <div className="form-group">
                     <label>Nova Palavra-passe</label>
@@ -859,6 +922,7 @@ function App() {
                     <input type="password" placeholder="Repete a nova senha" className="input-style" value={perfilData.confirmarNovaSenha} onChange={e => setPerfilData({...perfilData, confirmarNovaSenha: e.target.value})} />
                   </div>
                 </div>
+
                 <button type="submit" className="btn-primary" style={{ marginTop: '15px', width: '100%' }}>Salvar Alterações</button>
               </form>
             </div>
